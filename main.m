@@ -1,18 +1,27 @@
+%% inizializzazione
+clearvars
+clc
 % dimensioni sezione in mm
-L = 1000;
-t = 250;
+H = 300;
+B = 1000;
 % altezza dei rettangoli
-dL = 1;
-Lv = 0:dL:L; % vettore delle coordinate dei rettangoli
+dh = 1;
+h = 0:dh:H; % vettore delle coordinate dei rettangoli
+b = ones(size(h))*B;
 % definizione della posizione delle armature
-d1 = 50;
-d2 = 950;
-A1 = 154;
-A2 = 154;
+d1 = 40;
+d2 = 260;
+A1 = 565;
+A2 = 565;
 % definizione della curva di deformazione
-ecu = 3.5e-3;
-ec2 = 2.0e-3;
-esu = -10e-3;
+def_not.ecu = 3.5e-3;
+def_not.ec2 = 2.0e-3;
+def_not.ec3 = 1.75e-3;
+def_not.esu = 10e-3;
+def_not.eyd = 450/1.15/210e3;
+%%
+[N, M] = calcoloNM(30.28,[h;b]',[d1;d2],[A1;A2],def_not,(0.85*25/1.5),450/1.15,'plastica')
+%%
 x = -1000:2000;
 for i_x = 1:length(x)
     [e1, e2] = deformazionePiana(x(i_x), L, max(d1,d2), ecu, ec2, esu);
