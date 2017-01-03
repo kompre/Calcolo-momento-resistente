@@ -8,7 +8,7 @@ clc
 % luce massima ammissibile per ottenere un momento sollecitante inferiore
 % in camapata.
 
-Fd = 66.3; %[kN/m2]
+Fd = 96.19; %[kN/m2]
 diam_platea = [10; 12; 14; 16; 18]; % diametri delle barre [mm]
 passo = 200; % distanza tra le barre [mm]
 Mrd = zeros(size(diam_platea));
@@ -68,7 +68,8 @@ for fi = 1:length(diam_platea)
     
     
 end
-tab = table(diam_platea, Area, Mrd, Lp_max, peso.platea)
+tab = table(diam_platea, Area, Mrd, Lp_max);
+tab.peso = peso.platea
 %% Dimensionamento delle travi di fondazione
 % In funzione della massima luce si ottiene il carico agente sulle travi di
 % fondazione in kN/m. Analogamente si ricava l'interasse massimo tra i
@@ -137,4 +138,7 @@ surf(diam_trave, Lp_max, costo.totale')
 figure(2)
 surf(diam_trave, Lp_max, peso.totale')
 
+[minimo.costo.fi, minimo.ind.fi] = min(costo.totale,[],1);
+[minimo.costo.l,  minimo.ind.l ] = min(minimo.costo.fi);
+minimo.Ltr = Lt_max(minimo.ind.fi(minimo.ind.l), minimo.ind.l)
         
