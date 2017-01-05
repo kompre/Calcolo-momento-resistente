@@ -22,14 +22,15 @@ function [ N, M ] = calcoloNM( x, sezione, d, A, def_not, fcd, fyd, tipo)
 %       tipo: tipo di analisi svolta ("elastica" o "plastica");
 
 
-%% estrazione dei vettori della struct "sezione"
+%% estrazione dei vettori della matrice "sezione"
 
 xm = sezione(:,1);  % il primo campo alla coordinata in xm del baricentro dei rettangoli
 ym = sezione(:,2);  % il secondo campo è riservato alla coordinata in ym del baricentro dei rattngoli
 db = sezione(:,3);  % il terzo campo è riservato alla larghezza in x dei rettangoli
 dh = sezione(:,4);  % il quarto campo è riservato alla larghezza in y dei rettangoli
 
-H = sum(dh);    % massima altezza della sezione
+[~, ih, ~] = unique(ym);    % elimina le componenti duplicate
+H = sum(dh(ih));    % massima altezza della sezione (somma solo una volta dh alla quota ym)
 
 %% inserimento delle coordindate dell'aramtura
 for i = 1:length(d)
