@@ -13,7 +13,7 @@ function [ N, M ] = calcoloNM( x, sezione, d, A, def_not, fcd, fyd, tipo)
 %       A: vettore contenente le aree di armatura;
 %       def_not: struttura che contiene tutte le deformazioni notevoli della sezione in c.a. nel seguente ordine:
 %           ecu:    deformazione ultima del cls
-%           ec2:    deformazione al limite elastico per il diagramma parabola rettangolo 
+%           ec2:    deformazione al limite elastico per il diagramma parabola rettangolo
 %           ec3:    deformazione al limite elastico per il diagramma lineare-rettangolo
 %           eyd:    deformazione al limite elastico dell'acciaio
 %           esu:    deformazione al limite ultimo dell'acciaio
@@ -29,27 +29,32 @@ ym = sezione(:,2);  % il secondo campo è riservato alla coordinata in ym del bar
 db = sezione(:,3);  % il terzo campo è riservato alla larghezza in x dei rettangoli
 dh = sezione(:,4);  % il quarto campo è riservato alla larghezza in y dei rettangoli
 
+Av = zeros(size(ym));   % questo vettore è riservato per l'area di acciaio. È zero ovunque tranne nei punti in cui ym == d
+
 [~, ih, ~] = unique(ym);    % elimina le componenti duplicate
 H = sum(dh(ih));    % massima altezza della sezione (somma solo una volta dh alla quota ym)
 
-%% inserimento delle coordindate dell'aramtura
+%% inserimento delle coordindate dell'armatura
 for i = 1:length(d)
-    % cerca se d(i) è gia presente nel vettore delle ordinate ym,
-    % altrimenti lo aggiunge in coda, mettendo a 0 db e dh, in modo tale
-    % da contare esclusivamente il contributo dell'armatuta
-    if isempty(find(ym==d(i),1))
-        xm = [xm; 0];
-        ym = [ym; d(i)];
-        db = [db; 0];
-        dh = [dh; 0];
-    end
+    % aggiunge le righe dell'armatura ai vettori della sezione
+    % NOTA: per il calcolo della flessione deviata sarà necessario
+    % specificare anche xm
+    xm = [xm; 0];
+    ym = [ym; d(i)];
+    db = [db; 0];
+    dh = [dh; 0];
+    Av = [Av; A(i)];    
 end
 
 %% estrazione delle deformazioni dalla struct "deformazioni_notevoli"
 % in questo caso le variabili in deformazioni_notevoli devono essere
 % nominare in maniera accurata.
 
-extractField(def_not)
+ecu = def_not.ecu;
+ec2 = def_not.ec2;
+ec3 = def_not.ec3;
+eyd = def_not.eyd;
+esu = def_not.esu;
 
 %% estrazione del profilo di deformarzione
 % calcolo delle deformazioni agli estremi della sezione
@@ -62,13 +67,11 @@ end
 %%
 n = zeros(size(ym));
 m = zeros(size(ym));
-for i = 1:length(ym)
-    ev = e1 - (e1 - e2)*ym(i)/H;    % deformazione nel punto ym(i)
-    sc = legameCostituivo(ev, ec3, fcd, 'lineare');   %tensione nel cls
-    ss = legameCostituivo(ev, eyd, fyd, 'bilineare'); %tensione nell'acciaio
-    n(i) = db(i) * dh(i) * sc + (d==ym(i))' * A * ss; 
-    m(i) = n(i)*(H/2 - ym(i));
-end
+ev = e1 - (e1 - e2)*ym/H;    % deformazione nel punto ym(i)
+sc = legameCostituivo(ev, ec3, fcd, 'lineare');   %tensione nel cls
+ss = legameCostituivo(ev, eyd, fyd, 'bilineare'); %tensione nell'acciaio
+n = db.*dh.*sc + Av.*ss;
+m = n .* (H/2 - ym);
 N = sum(n);
 M = sum(m);
 
